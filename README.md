@@ -22,5 +22,5 @@
        - Predicted ![Image description](will edit later)
        
     - Normal classifier
-        - ![Image description](will edit later)
+        - ![Image description](https://github.com/VenkoChakalov/classifier/blob/master/demo/1.png)
     
