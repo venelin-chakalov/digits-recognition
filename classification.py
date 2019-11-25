@@ -1,101 +1,17 @@
 import numpy as np
-import pandas as pd
 import pickle
-from sklearn import datasets
 from matplotlib import pyplot as plt
+
+import data_processing as dp
 
 data, test_data_x, test_data_y = None, None, None
 X, Y, W = [], [], []
 
 
-def load_data(name):
-    global data
-    data = pd.read_csv(name)
-
-
-def save_weights_to(file, weights):
-    print('saving the generated values in %s...' % (file))
-    with open(file, 'wb') as fp:
-        pickle.dump(weights, fp)
-
-
-def load_weights_from(file):
-    weights = []
-    try:
-        with open(file, 'rb') as fp:
-            weights = pickle.load(fp)
-        print('found a training file...')
-    except FileNotFoundError:
-        print("no training file found...")
-    return weights
-
-
-def transform_data(transformation: dict, column):
-    global data
-    for key in transformation.keys():
-        data.loc[data[column] == key, column] = transformation[key]
-
-
-def remove_columns(columns):
-    global data
-    for column in columns:
-        data = data.drop(column, axis=1)
-
-
-def shuffle_data():
-    global data
-    data = data.sample(frac=1)
-
-
-def to_np_array():
-    global data
-    data = np.array(data.values.tolist())
-
-
-def split_data():
-    test_data, train_data = data[:30], data[30:]
-    return test_data, train_data
-
-
-def add_dummy_feature():
-    global X
-    X = np.insert(X, 0, values=1, axis=1)
-
-
-def load_weights():
-    global W
-    W = np.zeros((len(X[0]), 1))
-
-
-def fit(name):
-    global X, Y, W, test_data_x, test_data_y
-    # first load the data
-    print('loading the data...')
-    load_data(name)
-    print('start processing the data...')
-    # remove the redundant columns, select the columns based on your dataset
-    remove_columns(['id', 'Unnamed: 32'])
-    # transform the results from Strings to Boolean representation, choose what to pick as a prediction goal
-    transform_data({'B': 1, 'M': 0}, 'diagnosis')
-    # shuffle the data
-    shuffle_data()
-    # transform it into np array
-    to_np_array()
-
-    # split data into training set and test set
-    test_data, train_data = split_data()
-
-    # separate the features and the results into two separate arrays
-    X, Y = train_data[:, 1:], train_data[:, 0]
-
-    # add x0 = 1 so we can use w0 as a free variable
-    add_dummy_feature()
-
-    # load initial values for W
-    load_weights()
-
-    test_data_x, test_data_y = test_data[:, 1:], test_data[:, 0]
-    print('data processing is finished...')
+def init_values():
+    global data, test_data_x, test_data_y, X, Y, W
+    data, test_data_x, test_data_y = dp.data, dp.test_data_x, dp.test_data_y
+    X, Y, W = dp.X, dp.Y, dp.W
 
 
 def hypothesis(x, weights):
@@ -123,7 +39,7 @@ def gradient(size, initial_weights):
     for k in range(300000):
         if i == size - 1:
             i = 0
-        # temp_W = weights[k] - (rate / 2*m) * derivative_of(-(ylog|h(x)| + (1-y)log|1-h(x)|)
+        # temp_W = weights[k] - (rate / 2*m) * partial derivative_of(-(ylog|h(x)| + (1-y)log|1-h(x)|)
         # temp_W = weights[k] - (rate / m) * ((h(X) - y) * X[k])
         # where k is the index of the current training example
         temp_weights = np.array(
@@ -134,72 +50,73 @@ def gradient(size, initial_weights):
     return weights
 
 
-def predict(input_set):
+def predict(input_set, weights):
     input_set = np.insert(input_set, 0, values=1, axis=0)
 
     # our threshold value is 0.5, if the probability is bigger than 0.5, we assume the result is correct
-    return hypothesis(input_set, W) > 0.5
+    return hypothesis(input_set, weights) > 0.5
 
 
-def normalize_number(number_goal):
-    # since its binary classifier we need to know which value is the desired one and which is not
-    # mark all the desired values as 1 and the others as 0
-    for i in range(len(Y)):
-        if Y[i] == number_goal:
-            Y[i] = 1
-        else:
-            Y[i] = 0
+def predict_multiclass(input_set):
+    number = None
+    for i in range(len(W)):
+        if predict(input_set, W[i]):
+            number = i
+    return number
 
 
-def fit_images(number_goal):
-    global X, Y, test_data_x, test_data_y
-    # here we download MNIST dataset with handwritten images
-    # we use sklearn dataset module to access this data, alternatively we can download it manually
-    print('loading image dataset...')
-    digits = datasets.load_digits()
+def fit_image_model(digit):
+    dp.fit_images(digit)
+    filename = "trained_images_" + digit + ".data"
+    return filename
 
-    # images are represented as 8*8 matrices, so we have to reshape it into a vector in order to ease the use of the h(X)
-    # our new vector is in shape (64,1)
-    images = digits.images.reshape((len(digits.images), -1))
-    print('start preprocessing the data...')
-    # split the data into features and labels
-    X, Y = np.array(images), np.array(digits.target)
-    # just for the test we select the first 10 records
-    test_data_x, test_data_y, X, Y = X[:10], Y[:10], X[10:], Y[10:]
 
-    # add x0 = 1 so we can use w0 as a free variable
-    add_dummy_feature()
+def fit_data_model(name_of_file):
+    dp.fit(name_of_file)
+    filename = 'trained_dataset.data'
+    return filename
 
-    # mark the number to predict as 1, the others as 0
-    normalize_number(number_goal)
 
-    # load initial values for W
-    load_weights()
-    print('data processing is finished')
+def generate_weights(filename):
+    print('searching for optimal weights...')
+    init_values()
+    weights = gradient(len(X), W)
+    print('search done!')
+    dp.save_weights_to(filename, weights)
+    return weights
+
+
+def fit_missing_training_models(missing_weights, weights: list):
+    for w in missing_weights:
+        filename = fit_image_model(w)
+        weights.insert(w - 1, generate_weights(filename))
+    return weights
 
 
 def train_model(type_of_data):
-    global W
+    global W, X, Y
     weights = []
     filename = ''
     if type_of_data == 'binary_classifier':
         desired_num = input('select a number that you want to compare to others: ')
-        weights = load_weights_from("trained_images_" + desired_num + ".data")
+        weights = dp.load_weights_from("trained_images_" + desired_num + ".data")
         if len(weights) == 0:
-            fit_images(int(desired_num))
-            filename = "trained_images_" + desired_num + ".data"
+            filename = fit_image_model(int(desired_num))
+
+    elif type_of_data == 'multiclass_classifier':
+        weights = dp.load_multiple_weights("trained_images_", ".data")
+        if len(weights) != 10:
+            missing_weights = dp.find_missing_weight("trained_images_", ".data")
+            weights = fit_missing_training_models(missing_weights, weights)
+
     else:
         name_of_file = input('select the name of the file: ')
-        weights = load_weights_from('trained_dataset.data')
+        weights = dp.load_weights_from('trained_dataset.data')
         if len(weights) == 0:
-            fit(name_of_file)
-            filename = 'trained_dataset.data'
+            filename = fit_data_model(name_of_file)
 
     if len(weights) == 0:
-        print('searching for optimal weights...')
-        weights = gradient(len(X), W)
-        print('search done!')
-        save_weights_to(filename, weights)
+        weights = generate_weights(filename)
     else:
         weights = np.array(weights)
 
@@ -208,7 +125,7 @@ def train_model(type_of_data):
 
 # sample function that checks whether the provided result is correct
 def test_image_classifier():
-    train_model('binary_classifier')
+    train_model('multiclass_classifier')
     num_3 = []
     print('loading the test data from a file...')
     try:
@@ -217,8 +134,8 @@ def test_image_classifier():
         print('data finished loading')
     except FileNotFoundError:
         print("no training file")
-
-    print("is this the number 3? %s" % (predict(num_3)))
+    print('what is this number? %d' % (predict_multiclass(num_3)))
+    # print("is this the number 3? %s" % (predict(num_3, W)))
     plt.imshow(num_3.reshape(8, 8), interpolation='nearest')
     plt.show()
 
@@ -226,7 +143,7 @@ def test_image_classifier():
 def test_tumor_classifier():
     train_model('normal')
     sample_x, sample_y = test_data_x[0], test_data_y[0]
-    print('is benign? : predicted - %s, actual - %s' % (predict(sample_x), bool(sample_y)))
+    print('is benign? : predicted - %s, actual - %s' % (predict(sample_x, W), bool(sample_y)))
 
 
 test_image_classifier()
