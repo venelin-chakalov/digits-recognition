@@ -18,13 +18,28 @@
   
   ### DEMO
    Image classifier   
-   - Actual ![Image description](https://github.com/VenkoChakalov/classifier/blob/master/demo/3.png)
+   #### MULTICLASS CLASSIFIER
+   - Actual
+     ![Image description](https://github.com/VenkoChakalov/classifier/blob/master/demo/3.png)
+   
+   
+   
+   - Predicted
+     ![Image description](https://github.com/VenkoChakalov/classifier/blob/master/demo/4.png)
+
+   
+   --------------------------------------------------------------------------------------------------------------------------
+   #### BINARY CLASSIFIER 
+   - Actual 
+    ![Image description](https://github.com/VenkoChakalov/classifier/blob/master/demo/3.png)
        
        
        
-       
-   - Predicted ![Image description](https://github.com/VenkoChakalov/classifier/blob/master/demo/2.png)
-       
+   - Predicted 
+    ![Image description](https://github.com/VenkoChakalov/classifier/blob/master/demo/2.png)
+   --------------------------------------------------------------------------------------------------------------------------
+   
+   
    Normal classifier
        - ![Image description](https://github.com/VenkoChakalov/classifier/blob/master/demo/1.png)
     
