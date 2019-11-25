@@ -17,10 +17,14 @@
   - the classifier contains a lot of redundant code, many of the things can be optimized but still produces correct result in a     reasonable amount of time
   
   ### DEMO
-    - Image classifier
-       - Actual ![Image description](will edit later)
-       - Predicted ![Image description](will edit later)
+   Image classifier   
+   - Actual ![Image description](https://github.com/VenkoChakalov/classifier/blob/master/demo/3.png)
        
-    - Normal classifier
-        - ![Image description](https://github.com/VenkoChakalov/classifier/blob/master/demo/1.png)
+       
+       
+       
+   - Predicted ![Image description](https://github.com/VenkoChakalov/classifier/blob/master/demo/2.png)
+       
+   Normal classifier
+       - ![Image description](https://github.com/VenkoChakalov/classifier/blob/master/demo/1.png)
     
