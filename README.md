@@ -1,5 +1,5 @@
 # CLASSIFIER
-  - pure python based implementation of classifier which can be used as an binary image classifier or yes/no classifier 
+  - pure python based implementation of classifier which can be used as an binary/multiclass image classifier or yes/no             classifier 
   - almost no use of external libraries except numpy
   - comes with generated trained files
   ### REQUIREMENTS
